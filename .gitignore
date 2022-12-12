@@ -1,9 +1,11 @@
 # dummy notes
 notes.txt
+archive/
 
 # datasets
 *.dat
 *.csv
+output/*.txt
 
 
 
