@@ -41,10 +41,6 @@ def experiment(dataset: ndarray, oversampling, reverse_pca: bool, logger: Logger
     vfunc = np.vectorize(converter)
     Y = vfunc(Y)
 
-    # if not reverse_pca:
-    #     X = pca.fit_transform(X)
-
-    # x_test = None
     scores = np.zeros((len(CLASSIFIRES), N_SPLITS*N_REPEATS))
     for fold_id, (train, test) in enumerate(rskf.split(X, Y)):
         for clf_id, clf_name in enumerate(CLASSIFIRES):

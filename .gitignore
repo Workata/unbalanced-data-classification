@@ -6,6 +6,7 @@ archive/
 *.dat
 *.csv
 output/*.txt
+config.yaml
 
 
 

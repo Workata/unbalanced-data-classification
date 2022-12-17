@@ -3,12 +3,12 @@
 
 ### Setup project
 
-<!-- * Create/copy config file:
+* Create/copy config file:
 ```sh
-cp config_example.json config.json
-``` -->
+cp config_example.yaml config.yaml
+```
 
-<!-- * Change config settings if needed -->
+* Change config settings if needed
 
 * Create venv
 ```sh
