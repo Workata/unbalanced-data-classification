@@ -1,6 +1,8 @@
 import pandas as pd
+from pandas import DataFrame
+from numpy import ndarray
 import re
-from typing import List
+from typing import List, Union
 
 
 class KeelDatasetLoader:
@@ -16,7 +18,11 @@ class KeelDatasetLoader:
 
     DATASET_FOLDER = "./datasets"
 
-    def load(self, dataset_name: str):
+    def load(self, dataset_name: str, convert_to_ndarray=False) -> Union[DataFrame, ndarray]:
+        """
+        Returns dataset by given dataset name.
+        By default it's a dataframe, but can be converted to numpy's ndarray.
+        """
         dataset_path = self._get_dataset_path(dataset_name)
         dataset_file = self._read_file(file_path=dataset_path)
         headers = self._get_dataset_headers(dataset_file)
@@ -26,10 +32,9 @@ class KeelDatasetLoader:
             names=headers,
             index_col=None
         )
-        return dataset_df
+        return dataset_df.to_numpy() if convert_to_ndarray else dataset_df
 
-
-    def _get_dataset_headers(self, dataset_file) -> List[str]:
+    def _get_dataset_headers(self, dataset_file: str) -> List[str]:
         pattern = f'@inputs (.*)'
         headers_str = re.search(pattern, dataset_file, re.IGNORECASE).group(1)
         return [*headers_str.split(', '), 'class']

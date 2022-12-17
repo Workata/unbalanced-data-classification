@@ -15,21 +15,14 @@ def main() -> None:
 
     dataset_names = config.get('datasets', [])
     for dateset_name in dataset_names:
-        dataset = dataset_loader.load(dateset_name).to_numpy()
-        logger = Logger(dateset_name.replace(".dat", ".txt"))
+        dataset = dataset_loader.load(dateset_name, convert_to_ndarray=True)
+        logger = Logger(log_file_name=dateset_name.replace(".dat", ".log"))
         logger.write(dateset_name)
 
-        experiment(dataset, smote, reverse_pca=True, logger=logger)
-        logger.write("\n----------------------------------------\n")
-
-        experiment(dataset, smote, reverse_pca=False, logger=logger)
-        logger.write("\n----------------------------------------\n")
-
+        experiment(dataset, oversampling=smote, reverse_pca=True, logger=logger)
+        experiment(dataset, oversampling=smote, reverse_pca=False, logger=logger)
         # experiment(dataset, ros, reverse_pca=True, logger=logger)
-        # logger.write("\n----------------------------------------\n")
-
         # experiment(dataset, ros, reverse_pca=False, logger=logger)
-        logger.write("\n----------------------------------------\n")
 
 if __name__ == "__main__":
     main()

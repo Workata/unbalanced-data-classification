@@ -32,6 +32,7 @@ rskf = RepeatedStratifiedKFold(
 pca = PCA(n_components=N_COMPONENTS)
 
 def experiment(dataset: ndarray, oversampling, reverse_pca: bool, logger: Logger) -> None:
+    logger.write("\n----------------------------------------\n")
     logger.write(f"Settings[ reverse_pca: {reverse_pca}, oversampling: {oversampling.__class__.__name__}]")
 
     X = dataset[:, :-1]
@@ -111,3 +112,4 @@ def statistical_analysis(balanced_acc_score, logger):
     stat_better_table = tabulate(np.concatenate(
         (names_column, stat_better), axis=1), headers)
     logger.write(f"Statistically significantly better:\n {stat_better_table}")
+    logger.write("\n----------------------------------------\n")
