@@ -10,8 +10,8 @@ class KeelDatasetLoader:
     FORMAT:
     @...
     @...
-    @inputs (headers)
-    @outputs ()
+    @inputs (features)
+    @outputs (classes)
     @data
     (csv data)
     """
@@ -32,12 +32,21 @@ class KeelDatasetLoader:
             names=headers,
             index_col=None
         )
+        dataset_df = self._map_classes(dataset_df)
         return dataset_df.to_numpy() if convert_to_ndarray else dataset_df
 
+    def _map_classes(self, df: DataFrame) -> DataFrame:
+        class_mapping = {'negative': 0, 'positive': 1}
+        df['Class'] = df['Class'].apply(lambda x: class_mapping[x.strip()])
+        return df
+
     def _get_dataset_headers(self, dataset_file: str) -> List[str]:
-        pattern = f'@inputs (.*)'
-        headers_str = re.search(pattern, dataset_file, re.IGNORECASE).group(1)
-        return [*headers_str.split(', '), 'class']
+        features_str = self._extract_attribute(pattern='@inputs (.*)', content=dataset_file)
+        classes_str = self._extract_attribute(pattern='@outputs (.*)', content=dataset_file)
+        return [*features_str.split(', '), *classes_str.split(', ')]
+
+    def _extract_attribute(self, pattern: str, content: str) -> str:
+        return re.search(pattern , content, re.IGNORECASE).group(1)
 
     def _get_dataset_path(self, dataset_name: str) -> str:
         return f"{self.DATASET_FOLDER}/{dataset_name}"
