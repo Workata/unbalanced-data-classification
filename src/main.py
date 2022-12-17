@@ -22,10 +22,13 @@ for dateset_name in DATASETES_NAMES:
     logger.write(dateset_name)
 
     experiment(dataset, smote, reverse_pca=True, logger=logger)
-    logger.write("\n########################################\n")
+    logger.write("\n----------------------------------------\n")
+
     experiment(dataset, smote, reverse_pca=False, logger=logger)
-    logger.write("\n########################################\n")
-    experiment(dataset, ros, reverse_pca=True, logger=logger)
-    logger.write("\n########################################\n")
-    experiment(dataset, ros, reverse_pca=False, logger=logger)
-    logger.write("\n########################################\n")
+    logger.write("\n----------------------------------------\n")
+
+    # experiment(dataset, ros, reverse_pca=True, logger=logger)
+    # logger.write("\n----------------------------------------\n")
+
+    # experiment(dataset, ros, reverse_pca=False, logger=logger)
+    logger.write("\n----------------------------------------\n")

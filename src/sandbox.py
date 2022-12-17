@@ -32,17 +32,8 @@ rskf = RepeatedStratifiedKFold(
 pca = PCA(n_components=N_COMPONENTS)
 
 def experiment(dataset: ndarray, oversampling, reverse_pca: bool, logger: Logger) -> None:
-    """_summary_
-
-    Args:
-        oversampling (_type_): ROS / SMOTE
-        reverse_pca (bool): use reverse pca or not
-    """
-
     logger.write(f"Settings[ reverse_pca: {reverse_pca}, oversampling: {oversampling.__class__.__name__}]")
 
-    # print(dataset)
-    print("Exp")
     X = dataset[:, :-1]
     Y = dataset[:, -1]
     class_mapping = {'negative': 0, 'positive': 1}
@@ -50,15 +41,20 @@ def experiment(dataset: ndarray, oversampling, reverse_pca: bool, logger: Logger
     vfunc = np.vectorize(converter)
     Y = vfunc(Y)
 
-    if not reverse_pca:
-        X = pca.fit_transform(X)
+    # if not reverse_pca:
+    #     X = pca.fit_transform(X)
 
+    # x_test = None
     scores = np.zeros((len(CLASSIFIRES), N_SPLITS*N_REPEATS))
     for fold_id, (train, test) in enumerate(rskf.split(X, Y)):
         for clf_id, clf_name in enumerate(CLASSIFIRES):
             clf = clone(CLASSIFIRES[clf_name])
 
-            x_train = pca.fit_transform(X[train]) if reverse_pca else X[train]
+            x_train = pca.fit_transform(X[train])
+            if not reverse_pca:
+                x_test = pca.transform(X[test])
+            else:
+                x_test= X[test]
 
             # * oversampling - SMOTE/ROS
             x_train, y_train = oversampling.fit_resample(x_train, Y[train])
@@ -66,7 +62,7 @@ def experiment(dataset: ndarray, oversampling, reverse_pca: bool, logger: Logger
                 x_train = pca.inverse_transform(x_train)
 
             clf.fit(x_train, y_train)
-            y_pred = clf.predict(X[test])
+            y_pred = clf.predict(x_test)
             scores[clf_id, fold_id] = balanced_accuracy_score(Y[test], y_pred)
 
     mean = np.mean(scores, axis=1)
