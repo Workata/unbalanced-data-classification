@@ -10,6 +10,7 @@ from sklearn.metrics import \
 from sklearn.model_selection import RepeatedStratifiedKFold
 from tabulate import tabulate
 import pandas as pd
+from typing import List
 
 from utils import Logger
 
@@ -36,8 +37,8 @@ class ClassifiersComparator:
     def compare(self, oversampling, reverse_pca: bool) -> None:
         self._logger.write(f"Settings[ reverse_pca: {reverse_pca}, oversampling: {oversampling.__class__.__name__}]")
         acc_score, df_acc = self._calculate_accuracy(oversampling, reverse_pca)
-        df_better = self._do_statystical_analysis(acc_score)
-        return df_acc, df_better
+        # df_better = self._do_statystical_analysis(acc_score)
+        return acc_score, df_acc # df_acc, df_better
 
     @ignore_warnings(category=ConvergenceWarning)
     def _calculate_accuracy(self, oversampling, reverse_pca) -> ndarray:
@@ -78,21 +79,21 @@ class ClassifiersComparator:
         self._logger.write(str(acc_score))
         return acc_score, df
 
-    def _do_statystical_analysis(self, acc_score: ndarray) -> None:
+    def do_statystical_analysis(self, all_acc_score: List[ndarray]) -> None:
         # * init tables
-        shape = (self._classifiers_num, self._classifiers_num)
+        shape = (4, 4)
         t_statistic = np.zeros(shape)
         p_value = np.zeros(shape)
         advantage = np.zeros(shape)
         significance = np.zeros(shape)
 
         # * t-student test
-        for i in range(self._classifiers_num):
-            for j in range(self._classifiers_num):
-                t_statistic[i, j], p_value[i, j] = ttest_rel(acc_score[i], acc_score[j])
+        for i in range(4):
+            for j in range(4):
+                t_statistic[i, j], p_value[i, j] = ttest_rel(all_acc_score[i], all_acc_score[j])
 
         # * create tables for statistics
-        headers = ["MLP_A", "CART", "KNN"]
+        headers = ["SMOTE-REVERSE", "SMOTE-NO-REVERSE", "ROS-REVERSE", "ROS-NO-REVERSE"]
         names_column = np.array([[header] for header in headers])
         t_statistic_table = np.concatenate((names_column, t_statistic), axis=1)
         t_statistic_table = tabulate(t_statistic_table, headers, floatfmt=".2f")
@@ -113,12 +114,13 @@ class ClassifiersComparator:
         print(stat_better)
         stat_better_table = tabulate(np.concatenate((names_column, stat_better), axis=1), headers)
 
-        # check vs advantage
+
         df = pd.DataFrame(data = [{
             'dataset': self._dataset_name,
-            'MLP': np.array2string(np.where(stat_better[0][:] == 1)[0]),
-            'CART': np.array2string(np.where(stat_better[1][:] == 1)[0]),
-            'KNN': np.array2string(np.where(stat_better[2][:] == 1)[0])
+            headers[0]: np.array2string(np.where(stat_better[0][:] == 1)[0]),
+            headers[1]: np.array2string(np.where(stat_better[1][:] == 1)[0]),
+            headers[2]: np.array2string(np.where(stat_better[2][:] == 1)[0]),
+            headers[3]: np.array2string(np.where(stat_better[3][:] == 1)[0]),
         }])
         self._logger.write(f"Statistically significantly better:\n {stat_better_table}")
         self._logger.write("\n----------------------------------------\n")
