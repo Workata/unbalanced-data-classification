@@ -7,6 +7,7 @@ from comparator import Comparator
 from loaders import ConfigLoader, KeelDatasetLoader
 from utils import Logger
 import pandas as pd
+from pandas import DataFrame
 
 CONFIG_FILE_PATH = './config.yaml'
 CLASSIFIRES = {
@@ -18,18 +19,21 @@ CLASSIFIRES = {
     'KNN': KNeighborsClassifier(n_neighbors=3)
 }
 
+OS_SMOTE = SMOTE(random_state=1000)
+OS_ROS = RandomOverSampler(sampling_strategy='auto')
+
+def merge_df(main_df: DataFrame, row_df: DataFrame) -> DataFrame:
+    return pd.concat([row_df, main_df], ignore_index=True)
+
 def main() -> None:
     dataset_loader = KeelDatasetLoader()
     config = ConfigLoader.load(CONFIG_FILE_PATH)
 
-    smote = SMOTE(random_state=1000)
-    ros = RandomOverSampler(sampling_strategy='auto')
-
     dataset_names = config.get('datasets', [])
-    logger = Logger(log_file_name="output.txt")
+    logger = Logger(log_file_name='output.txt')
 
-    df_acc = pd.DataFrame()
-    df_better = pd.DataFrame()
+    all_datasets_df_acc = pd.DataFrame()
+    all_datasets_df_stat_signi_better = pd.DataFrame()
 
     for classifire_name in CLASSIFIRES:
         for dateset_name in dataset_names:
@@ -38,35 +42,30 @@ def main() -> None:
 
             comparator = Comparator(classifier=CLASSIFIRES[classifire_name], dataset=dataset, logger=logger, dataset_name=dateset_name)
 
-            all_acc_score = []
+            acc_score_smote_with_reverse = comparator.calculate_accuracy(oversampling=OS_SMOTE, reverse_pca=True)
+            acc_score_smote_without_reverse = comparator.calculate_accuracy(oversampling=OS_SMOTE, reverse_pca=False)
+            acc_score_ros_with_reverse = comparator.calculate_accuracy(oversampling=OS_ROS, reverse_pca=True)
+            acc_score_ros_without_reverse = comparator.calculate_accuracy(oversampling=OS_ROS, reverse_pca=False)
 
-            acc_score, acc_score_mean_1 = comparator.compare(oversampling=smote, reverse_pca=True)
-            all_acc_score.append(acc_score)
-
-            acc_score, acc_score_mean_2 = comparator.compare(oversampling=smote, reverse_pca=False)
-            all_acc_score.append(acc_score)
-
-            acc_score, acc_score_mean_3 = comparator.compare(oversampling=ros, reverse_pca=True)
-            all_acc_score.append(acc_score)
-
-            acc_score, acc_score_mean_4 = comparator.compare(oversampling=ros, reverse_pca=False)
-            all_acc_score.append(acc_score)
-
-            output_df_better = comparator.do_statystical_analysis(all_acc_score)
-            df_better = pd.concat([output_df_better, df_better], ignore_index=True)
-            output_df_acc = pd.DataFrame(data = [{
+            dataset_df_acc = pd.DataFrame(data = [{
                 'dataset': dateset_name,
-                "SMOTE-REVERSE": acc_score_mean_1,
-                "SMOTE-NO-REVERSE": acc_score_mean_2,
-                "ROS-REVERSE": acc_score_mean_3,
-                "ROS-NO-REVERSE": acc_score_mean_4,
+                'SMOTE-REVERSE': comparator.get_acc_mean(acc_score_smote_with_reverse),
+                'SMOTE-NO-REVERSE': comparator.get_acc_mean(acc_score_smote_without_reverse),
+                'ROS-REVERSE': comparator.get_acc_mean(acc_score_ros_with_reverse),
+                'ROS-NO-REVERSE': comparator.get_acc_mean(acc_score_ros_without_reverse)
             }])
-            df_acc = pd.concat([output_df_acc, df_acc], ignore_index=True)
+            all_datasets_df_acc = merge_df(dataset_df_acc, all_datasets_df_acc)
 
-        df_acc.to_csv(f'./output/results_acc_{classifire_name}.csv')
-        df_acc = pd.DataFrame()
-        df_better.to_csv(f'./output/results_better_{classifire_name}.csv')
-        df_better = pd.DataFrame()
+            dataset_df_stat_signi_better = comparator.do_statystical_analysis([
+                acc_score_smote_with_reverse, acc_score_smote_without_reverse,
+                acc_score_ros_with_reverse, acc_score_ros_without_reverse
+            ])
+            all_datasets_df_stat_signi_better = merge_df(dataset_df_stat_signi_better, all_datasets_df_stat_signi_better)
+
+        all_datasets_df_acc.to_csv(f'./output/results_acc_{classifire_name}.csv')
+        all_datasets_df_stat_signi_better.to_csv(f'./output/results_better_{classifire_name}.csv')
+        all_datasets_df_acc = pd.DataFrame()
+        all_datasets_df_stat_signi_better = pd.DataFrame()
 
 
 if __name__ == "__main__":

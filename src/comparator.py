@@ -29,19 +29,9 @@ class Comparator:
         self._rskf = RepeatedStratifiedKFold(n_splits=self.N_SPLITS, n_repeats=self.N_REPEATS, random_state=42)
         self._pca = PCA(n_components=self.N_COMPONENTS)
 
-    @property
-    def _classifiers_num(self):
-        """Number of classifiers used"""
-        return len(self._classifiers)
-
-    def compare(self, oversampling, reverse_pca: bool) -> None:
-        self._logger.write(f"Settings[ reverse_pca: {reverse_pca}, oversampling: {oversampling.__class__.__name__}]")
-        acc_score, acc_score_mean = self._calculate_accuracy(oversampling, reverse_pca)
-        # df_better = self._do_statystical_analysis(acc_score)
-        return acc_score, acc_score_mean # df_acc, df_better
-
     @ignore_warnings(category=ConvergenceWarning)
-    def _calculate_accuracy(self, oversampling, reverse_pca) -> ndarray:
+    def calculate_accuracy(self, oversampling, reverse_pca) -> ndarray:
+        self._logger.write(f"Settings[ reverse_pca: {reverse_pca}, oversampling: {oversampling.__class__.__name__}]")
         X = self._dataset[:, :-1]
         Y = self._dataset[:, -1]
         scores = np.zeros(self.N_SPLITS*self.N_REPEATS)
@@ -61,13 +51,13 @@ class Comparator:
             y_pred = clf.predict(x_test)
             scores[fold_id] = balanced_accuracy_score(Y[test], y_pred)
 
-        mean = np.mean(scores)
-        std = np.std(scores)
-
         acc_score = np.copy(scores)
         self._logger.write("\n Balanced acc score values:")
         self._logger.write(str(acc_score))
-        return acc_score, mean
+        return acc_score
+
+    def get_acc_mean(self, acc_score):
+        return round(np.mean(acc_score), 2)
 
     def do_statystical_analysis(self, all_acc_score: List[ndarray]) -> None:
         print("--------ALL ACC score-----------")
@@ -81,8 +71,8 @@ class Comparator:
         significance = np.zeros(shape)
 
         # * t-student test
-        for i in range(4):
-            for j in range(4):
+        for i in range(shape[0]):
+            for j in range(shape[1]):
                 t_statistic[i, j], p_value[i, j] = ttest_rel(all_acc_score[i], all_acc_score[j])
 
         # * create tables for statistics
