@@ -10,6 +10,7 @@ import pandas as pd
 from pandas import DataFrame
 
 CONFIG_FILE_PATH = './config.yaml'
+LOG_FILE_NAME = 'output.txt'
 CLASSIFIRES = {
     'MLP': MLPClassifier(
         hidden_layer_sizes = (30, 30, 30), max_iter=400,
@@ -38,7 +39,7 @@ def main() -> None:
     config = ConfigLoader.load(CONFIG_FILE_PATH)
 
     dataset_names = config.get('datasets', [])
-    logger = Logger(log_file_name='output.txt')
+    logger = Logger(log_file_name=LOG_FILE_NAME)
 
     all_datasets_df_acc = pd.DataFrame()
     all_datasets_df_stat_signi_better = pd.DataFrame()
