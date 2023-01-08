@@ -1,8 +1,8 @@
 import pandas as pd
 from pandas import DataFrame
-from numpy import ndarray
 import re
-from typing import List, Union
+from typing import List
+from models import Dataset
 
 
 class KeelDatasetLoader:
@@ -18,7 +18,7 @@ class KeelDatasetLoader:
 
     DATASET_FOLDER = "./datasets"
 
-    def load(self, dataset_name: str, convert_to_ndarray=False) -> Union[DataFrame, ndarray]:
+    def load(self, dataset_name: str, convert_to_ndarray=False) -> Dataset:
         """
         Returns dataset by given dataset name.
         By default it's a dataframe, but can be converted to numpy's ndarray.
@@ -33,7 +33,8 @@ class KeelDatasetLoader:
             index_col=None
         )
         dataset_df = self._map_classes(dataset_df)
-        return dataset_df.to_numpy() if convert_to_ndarray else dataset_df
+        data = dataset_df.to_numpy() if convert_to_ndarray else dataset_df
+        return Dataset(name=dataset_name.replace(".dat", ""), data=data)
 
     def _map_classes(self, df: DataFrame) -> DataFrame:
         class_mapping = {'negative': 0, 'positive': 1}

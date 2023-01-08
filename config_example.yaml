@@ -1,4 +1,22 @@
 datasets: [
   "ecoli1.dat",
-  "ecoli2.dat"
+  "glass0.dat",
+  "new-thyroid1.dat",
+  "pima.dat",
+  "segment0.dat",
+  "vehicle0.dat",
+  "wisconsin.dat",
+  "yeast1.dat",
+  "glass5.dat",
+  "vowel0.dat",
+  "ecoli4.dat",
+  "vehicle1.dat",
+  "yeast3.dat",
+  "ecoli2.dat",
+  "ecoli3.dat",
+  "glass1.dat",
+  "haberman.dat",
+  "vehicle2.dat",
+  "vehicle3.dat",
+  "glass6.dat"
 ]
